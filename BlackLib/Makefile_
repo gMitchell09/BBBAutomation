@@ -1,0 +1,15 @@
+CC=g++
+CCFLAGS=-c -std=c++0x
+SOURCES=BlackADC.cpp BlackCore.cpp BlackGPIO.cpp BlackI2C.cpp BlackPWM.cpp BlackSPI.cpp BlackUART.cpp
+OBJECTS=$(SOURCES:.cpp=.o)
+
+LIBRARY=BlackLib.a
+
+all: $(OBJECTS) $(LIBRARY)
+
+$(LIBRARY): $(OBJECTS)
+	$(CC) $(CCFLAGS) $(OBJECTS) -o $@
+	ar rvs $(LIBRARY) $(OBJECTS)
+
+%.o: %.cpp
+	$(CC) $(CCFLAGS) $< -o $@
