@@ -30,6 +30,8 @@
 *.app
 
 *.*~
+*.swp
+
 # Executables
 *.exe
 *.out
