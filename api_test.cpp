@@ -19,6 +19,9 @@ public:
         {
             case ReadTemp:
                 printf("ReadTemp!!\n");
+                sendData = new float;
+                *(float*)sendData = 79.5f;
+                *sendDataLen = sizeof(float);
                 break;
             default:
                 printf("Other!!\n");
@@ -30,9 +33,13 @@ public:
 int main()
 {
     API_impl sAPI(true);
-    API_impl cAPI(false);
 
-    cAPI.CallFunction(API::ReadTemp);
-    sleep(1);
-    sAPI.CallbackWrapper();
+    while (true)
+    {
+        sleep(1);
+        sAPI.CallbackWrapper();
+        printf("Next!");
+    }
+    return 0;
 }
+

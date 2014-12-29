@@ -27,18 +27,19 @@ public:
     
 private:
     int sock_;
+    bool isServer_;
 };
 
 const std::vector<std::string> API::API_CALLS = 
 {"ReadTemp", "AddSchedule", "RemoveSchedule", "ShouldRunHeat", "ShouldRunAC", 
     "ShouldRunFan","TargetTemp", "EnableFan", "DisableFan", "PrintSchedule"};
 
-API::API(bool isServer)
+API::API(bool isServer) : isServer_(isServer)
 {
     sock_ = socket(AF_UNIX, SOCK_STREAM, 0);
     // set timeout options for our fancy-schmancy socket
     struct timeval timeout;
-    timeout.tv_sec = 5;
+    timeout.tv_sec = 2;
     timeout.tv_usec = 0;
     int yes = 1;
 
@@ -59,14 +60,25 @@ API::API(bool isServer)
         // just in case we have a lingering socket
         unlink (addr.sun_path);
         if (bind(sock_, (struct sockaddr*)&addr, strlen(addr.sun_path) + sizeof(addr.sun_family))
-                < 0) perror("Bind failed\n\n");
-        if (listen(sock_, 5) < 0) perror("listen failed\n\n");
+                < 0) 
+        {
+            perror("Bind failed");
+            throw "Bind failed";
+        }
+        if (listen(sock_, 5) < 0) 
+        {
+            perror("Listen failed");
+            throw "Listen failed";
+        }
     }
     else
     {
         if (connect(sock_, (struct sockaddr*)&addr, strlen(addr.sun_path) + sizeof(addr.sun_family))
                 < 0)
-            perror("Connect failed\n\n");
+        {
+            perror("Connect failed");
+            throw "Could not connect to server";
+        }
     }
 }
 
@@ -74,16 +86,22 @@ void API::CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buff
 {
     std::string message = API_CALLS[call];
     size_t bytesToSend = message.length();
-    ssize_t bytesSent;
+    size_t bytesSent;
    
     printf("Sending bytes for message: %s\n", message.c_str());
     while ((bytesSent += send(sock_, message.c_str(), bytesToSend, 0)) < bytesToSend);
-    printf("We sent %d bytes\n", bytesSent);
+    printf("We sent %d/%d bytes\n", bytesSent, bytesToSend);
     bytesSent = 0;
     if (dataLen > 0) while ((bytesSent += send(sock_, adtlData, dataLen, 0)) < dataLen);
 
-    // return
-    if (len > 0) ssize_t btRecvd = recv(sock_, &buffer, len, 0);
+    sleep(1);
+    if (len > 0) 
+    {
+        printf("Pointer: %p\n", buffer);
+        ssize_t btRecvd = recv(sock_, buffer, len, 0);
+        if (btRecvd < 0) perror("??? :'(");
+        printf("Received: %d/%d bytes\n", btRecvd, len);
+    }
 }
 
 void API::CallFunction(API_CALL call)
@@ -107,12 +125,14 @@ void API::CallbackWrapper()
     unsigned int clientAddrLen = sizeof(clientAddr);
 
     int clientfd;
-    if ((clientfd = accept(sock_, (struct sockaddr*)&clientAddr, &clientAddrLen)) < 0) perror("no acceptance");
+    if ((clientfd = accept(sock_, (struct sockaddr*)&clientAddr, &clientAddrLen)) < 0) 
+    {
+        perror("Connection refused");
+        return;
+    }
 
-    printf("About to check recv status... maybe we should wait longer... hmmm...\n");
     if ((nRecv = recv(clientfd, inBuf, 512, 0)) > 0)
     {
-        printf("We are in the recv.\n");
         std::string funcName;
         std::string inStr = std::string(inBuf);
         int pos = inStr.find_first_of(' ');
@@ -139,8 +159,10 @@ void API::CallbackWrapper()
         this->Callback(call, recvData.c_str(), recvData.length(), sendData, &sendDataLen);
 
         ssize_t bytesSent = 0;
+        printf("About to reply to client with: %d bytes\n", sendDataLen);
         if (sendDataLen > 0) 
-            while ((bytesSent += send(clientfd, sendData, sendDataLen, 0)) < sendDataLen);        
+            while ((bytesSent += send(clientfd, sendData, sendDataLen, 0)) < sendDataLen);
+        printf("Bytes sent: %d/%d\n", bytesSent, sendDataLen);        
     }
     else perror("Odd.");
 
@@ -154,3 +176,4 @@ API::~API()
     close(sock_);
     shutdown (sock_, SHUT_RDWR);
 }
+
