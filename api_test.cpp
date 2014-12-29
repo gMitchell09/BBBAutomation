@@ -13,14 +13,14 @@ class API_impl : public API
 {
 public:
     API_impl(bool isServer) : API(isServer) {}
-    virtual void Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *sendData, int *sendDataLen)
+    virtual void Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *&sendData, int *sendDataLen)
     {
         switch (call)
         {
             case ReadTemp:
                 printf("ReadTemp!!\n");
                 sendData = new float;
-                *(float*)sendData = 79.5f;
+                *((float*)sendData) = 81.5f;
                 *sendDataLen = sizeof(float);
                 break;
             default:

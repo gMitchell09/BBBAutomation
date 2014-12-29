@@ -23,7 +23,7 @@ public:
     void CallFunction(API_CALL call);
 
     void CallbackWrapper();
-    virtual void Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *sendData, int *sendDataLen);
+    virtual void Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *&sendData, int *sendDataLen);
     
 private:
     int sock_;
@@ -94,7 +94,7 @@ void API::CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buff
     bytesSent = 0;
     if (dataLen > 0) while ((bytesSent += send(sock_, adtlData, dataLen, 0)) < dataLen);
 
-    sleep(1);
+    //sleep(1);
     if (len > 0) 
     {
         printf("Pointer: %p\n", buffer);
@@ -109,7 +109,7 @@ void API::CallFunction(API_CALL call)
     this->CallFunction(call, NULL, 0, NULL, 0);
 }
 
-void API::Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *sendData, int *sendDataLen)
+void API::Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *&sendData, int *sendDataLen)
 {
     // do custom stuff here
     printf("Call: %s", API_CALLS[call].c_str());
@@ -159,6 +159,7 @@ void API::CallbackWrapper()
         this->Callback(call, recvData.c_str(), recvData.length(), sendData, &sendDataLen);
 
         ssize_t bytesSent = 0;
+        printf("Sending: %f\n", *((float*)sendData));
         printf("About to reply to client with: %d bytes\n", sendDataLen);
         if (sendDataLen > 0) 
             while ((bytesSent += send(clientfd, sendData, sendDataLen, 0)) < sendDataLen);
