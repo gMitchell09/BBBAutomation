@@ -8,7 +8,7 @@
 #include <string>
 #include <vector>
 
-#define DEBUG 1
+//#define DEBUG 1
 #if DEBUG
 #define DPRINTF(...) printf(__VA_ARGS__);
 #else
@@ -91,10 +91,17 @@ API::API(bool isServer) : isServer_(isServer)
 bool API::CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buffer, size_t len)
 {
     std::string message = API_CALLS[call];
+
+    if (dataLen > 0) 
+    {
+        message.append(" ");
+        message.append((const char*)adtlData, dataLen);
+        DPRINTF("Message capacity: %d, Datalen: %d\n", message.capacity(), dataLen);
+    }
     size_t bytesToSend = message.length();
     size_t bytesSent = 0;
    
-    DPRINTF("Sending bytes for message: %s\n", message.c_str());
+    DPRINTF("Sending bytes for message: %s\n", API_CALLS[call].c_str());
 
     ssize_t s = 0;
     while ((bytesSent += s) < bytesToSend)
@@ -108,18 +115,7 @@ bool API::CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buff
     } 
     DPRINTF("We sent %d/%d bytes\n", bytesSent, bytesToSend);
     
-    bytesSent = 0;
-    s = 0;
-    while ((bytesSent += s) < dataLen)
-    {
-        s = send(sock_, adtlData, dataLen, 0);
-        if (s < 0) 
-        {
-            perror("Adtl send");
-            break;
-        }
-    }
-    //sleep(1);
+//    sleep(1);
     if (len > 0) 
     {
         DPRINTF("Pointer: %p\n", buffer);
@@ -164,6 +160,7 @@ void API::CallbackWrapper()
 
     if ((nRecv = recv(clientfd, inBuf, 512, 0)) > 0)
     {
+        DPRINTF("Received %d bytes.\n", nRecv);
         std::string funcName;
         std::string inStr = std::string(inBuf);
         size_t pos = inStr.find_first_of(' ');
@@ -176,13 +173,21 @@ void API::CallbackWrapper()
         API_CALL call = (API_CALL) (itr - API_CALLS.begin());
         if (itr == API_CALLS.end())
         {
-            DPRINTF("Could not find call: %s\n", funcName.c_str());
+            printf("Could not find call: %s\n", funcName.c_str());
             return;
         }
 
         std::string recvData;
         if (pos != std::string::npos)
-             recvData = inStr.substr(inStr.find_first_of(' '), inStr.length());
+        {
+            recvData = inStr.substr(inStr.find_first_of(' ') + 1, inStr.length());
+//            printf("RecvData: ");
+//            for (size_t i = 0; i < recvData.length(); ++i)
+//            {
+//                printf("%02X ", recvData[i]);
+//            }
+//            printf("\n");
+        }
 
         void* sendData;
         int sendDataLen;
