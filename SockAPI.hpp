@@ -8,6 +8,12 @@
 #include <string>
 #include <vector>
 
+#define DEBUG 1
+#if DEBUG
+#define DPRINTF(...) printf(__VA_ARGS__);
+#else
+#define DPRINTF(...)
+#endif
 
 class API
 {
@@ -19,8 +25,8 @@ public:
 
     API(bool isServer);
     ~API();
-    void CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buffer, size_t len);
-    void CallFunction(API_CALL call);
+    bool CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buffer, size_t len);
+    bool CallFunction(API_CALL call);
 
     void CallbackWrapper();
     virtual void Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *&sendData, int *sendDataLen);
@@ -82,37 +88,62 @@ API::API(bool isServer) : isServer_(isServer)
     }
 }
 
-void API::CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buffer, size_t len)
+bool API::CallFunction(API_CALL call, void* adtlData, size_t dataLen, void* buffer, size_t len)
 {
     std::string message = API_CALLS[call];
     size_t bytesToSend = message.length();
-    size_t bytesSent;
+    size_t bytesSent = 0;
    
-    printf("Sending bytes for message: %s\n", message.c_str());
-    while ((bytesSent += send(sock_, message.c_str(), bytesToSend, 0)) < bytesToSend);
-    printf("We sent %d/%d bytes\n", bytesSent, bytesToSend);
-    bytesSent = 0;
-    if (dataLen > 0) while ((bytesSent += send(sock_, adtlData, dataLen, 0)) < dataLen);
+    DPRINTF("Sending bytes for message: %s\n", message.c_str());
 
+    ssize_t s = 0;
+    while ((bytesSent += s) < bytesToSend)
+    {
+        s = send(sock_, message.c_str(), bytesToSend, 0);
+        if (s < 0) 
+        {
+            perror("Client send");
+            break;
+        } 
+    } 
+    DPRINTF("We sent %d/%d bytes\n", bytesSent, bytesToSend);
+    
+    bytesSent = 0;
+    s = 0;
+    while ((bytesSent += s) < dataLen)
+    {
+        s = send(sock_, adtlData, dataLen, 0);
+        if (s < 0) 
+        {
+            perror("Adtl send");
+            break;
+        }
+    }
     //sleep(1);
     if (len > 0) 
     {
-        printf("Pointer: %p\n", buffer);
+        DPRINTF("Pointer: %p\n", buffer);
         ssize_t btRecvd = recv(sock_, buffer, len, 0);
-        if (btRecvd < 0) perror("??? :'(");
-        printf("Received: %d/%d bytes\n", btRecvd, len);
+        if (btRecvd < 0) 
+        {
+            perror("Recv failed");
+            return false;
+        }
+        DPRINTF("Received: %d/%d bytes\n", btRecvd, len);
     }
+    close(sock_);
+    return true;
 }
 
-void API::CallFunction(API_CALL call)
+bool API::CallFunction(API_CALL call)
 {
-    this->CallFunction(call, NULL, 0, NULL, 0);
+    return this->CallFunction(call, NULL, 0, NULL, 0);
 }
 
 void API::Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *&sendData, int *sendDataLen)
 {
     // do custom stuff here
-    printf("Call: %s", API_CALLS[call].c_str());
+    DPRINTF("Call: %s", API_CALLS[call].c_str());
 }
 
 void API::CallbackWrapper()
@@ -145,7 +176,7 @@ void API::CallbackWrapper()
         API_CALL call = (API_CALL) (itr - API_CALLS.begin());
         if (itr == API_CALLS.end())
         {
-            printf("Could not find call: %s\n", funcName.c_str());
+            DPRINTF("Could not find call: %s\n", funcName.c_str());
             return;
         }
 
@@ -155,15 +186,22 @@ void API::CallbackWrapper()
 
         void* sendData;
         int sendDataLen;
-        printf("Calling callback with call: %s\n", API_CALLS[call].c_str());
+        DPRINTF("Calling callback with call: %s\n", API_CALLS[call].c_str());
         this->Callback(call, recvData.c_str(), recvData.length(), sendData, &sendDataLen);
 
         ssize_t bytesSent = 0;
-        printf("Sending: %f\n", *((float*)sendData));
-        printf("About to reply to client with: %d bytes\n", sendDataLen);
-        if (sendDataLen > 0) 
-            while ((bytesSent += send(clientfd, sendData, sendDataLen, 0)) < sendDataLen);
-        printf("Bytes sent: %d/%d\n", bytesSent, sendDataLen);        
+        DPRINTF("About to reply to client with: %d bytes\n", sendDataLen);
+        if (sendDataLen > 0)
+        {
+            ssize_t s = 0;
+            while ((bytesSent += s) < sendDataLen)
+            {
+                DPRINTF("Before send\n");
+                s = send(clientfd, sendData, sendDataLen, 0);
+                if (s < 0) perror("Server send failed");
+            }
+        }
+        DPRINTF("Bytes sent: %d/%d\n", bytesSent, sendDataLen);        
     }
     else perror("Odd.");
 
@@ -173,7 +211,7 @@ void API::CallbackWrapper()
 
 API::~API()
 {
-    printf("Closing socket\n");
+    DPRINTF("Closing socket\n");
     close(sock_);
     shutdown (sock_, SHUT_RDWR);
 }
