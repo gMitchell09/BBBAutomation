@@ -166,7 +166,7 @@ void API::CallbackWrapper()
     {
         std::string funcName;
         std::string inStr = std::string(inBuf);
-        int pos = inStr.find_first_of(' ');
+        size_t pos = inStr.find_first_of(' ');
         if (pos != std::string::npos)
             funcName = inStr.substr(0, pos);
         else

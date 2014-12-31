@@ -28,7 +28,6 @@ int main()
                 float temp;
                 printf("&temp: %p\n", &temp);
                 cAPI.CallFunction(API::ReadTemp, NULL, 0, &temp, sizeof(temp));
-                printf("Temp: %x\n", temp);
                 printf("Current temperature is: %f\n", temp);
                 break;
             case 'a':
