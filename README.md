@@ -43,6 +43,6 @@ int main()
 }
 ```
 
-Most of these files are released under the AGPL v3 license <http://www.gnu.org/licenses/agpl.html>.  Check individual files for more details.
+Most of these files are released under the AGPL v3 license <http://www.gnu.org/licenses/agpl.html>.  Check individual files for more details.<br/>
 BlackLib (C) 2013-2014 by Yigit YUCE released under LGPLv3 (or later)
  
