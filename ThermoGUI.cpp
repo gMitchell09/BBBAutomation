@@ -18,6 +18,7 @@
 
 #include <gtkmm.h>
 #include <iostream>
+#include <thread>
 
 #include "BlackLib/BlackLib.h"
 
@@ -47,9 +48,24 @@ void destroyGPIO()
     for (int i = 0; i < 4; i++)
         delete gpio[i];
 }
+void foo()
+{
+    std::cout << "Woot!" << std::endl;
+}
+
+void bar(int x)
+{
+    std::cout << "bar: " << x << std::endl;
+}
 
 int main(int argc, char *argv[])
 {
+    std::thread first(foo);
+    std::thread second(bar, 2);
+
+    first.join();
+    second.join();
+
     initializeGPIO();
 
     Gtk::Main kit(argc, argv);
