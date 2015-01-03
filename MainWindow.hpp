@@ -25,7 +25,7 @@
 class MainWindow : public Gtk::Window
 {
 public:
-    MainWindow(Glib::RefPtr<Gtk::Builder> &builder);
+    MainWindow(BaseObjectType* winObj, Glib::RefPtr<Gtk::Builder> &builder);
 
     void go();
     void listenerDone();

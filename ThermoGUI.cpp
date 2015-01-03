@@ -21,6 +21,7 @@
 #include <thread>
 
 #include "BlackLib/BlackLib.h"
+#include "MainWindow.hpp"
 
 #define UI_FILE "thermo_layout.xml"
 
@@ -78,12 +79,12 @@ int main(int argc, char *argv[])
         return 1;
     }
 
-    Gtk::Window *main_win = NULL;
-    builder->get_widget("MainWindow", main_win);
-    Gtk::Button *button1;
-    builder->get_widget("button1", button1);
-
-    button1->signal_clicked().connect(sigc::ptr_fun(&toggleLed));
+    MainWindow *main_win = NULL;
+    builder->get_widget_derived("MainWindow", main_win);
+//    Gtk::Button *button1;
+//    builder->get_widget("button1", button1);
+//
+//    button1->signal_clicked().connect(sigc::ptr_fun(&toggleLed));
 
 	if (main_win) {
         kit.run(*main_win);
