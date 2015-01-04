@@ -17,9 +17,10 @@
 */
 
 #include "MainWindow.hpp"
+#include "GUIController.hpp"
 
 MainWindow::MainWindow(BaseObjectType* winObj, Glib::RefPtr<Gtk::Builder> &builder)
-    : Gtk::Window(winObj)
+    : Gtk::Window(winObj), m_controller(this)
 {
     listener = NULL;
     builder->get_widget("button1", button1);

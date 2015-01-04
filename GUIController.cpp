@@ -1,7 +1,4 @@
-#ifndef MAINWINDOW_HPP
-#define MAINWINDOW_HPP
-
-/* MainWindow.hpp
+/* GUIController.cpp 
  * -----------------------------------------------------------------------------
  * Copyright (C) 2015 George Mitchell
  * 
@@ -19,24 +16,22 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <gtkmm.h>
+#include "GUIController.hpp"
 
-class GUIController;
-class NetworkListener;
+using namespace std; // I'm lazy
 
-class MainWindow : public Gtk::Window
+GUIController::GUIController(shared_ptr<Thermostat> therm, shared_ptr<NetworkListener> net)
 {
-public:
-    MainWindow(BaseObjectType* winObj, Glib::RefPtr<Gtk::Builder> &builder);
+    m_thermostat = therm;
+    m_networkListener = net;
+}
 
-    void go();
-    void listenerDone();
-private:
-    Gtk::Button *button1;
-    NetworkListener *listener;
-    GUIController *m_controller;
-};
+float GUIController::getOutdoorTemperature() { return -1.0f; }
+float GUIController::getIndoorTemperature() { return -1.0f; }
+float GUIController::getOutdoorHumidity() { return -1.0f; }
+float GUIController::getIndoorHumidity() { return -1.0f; }
 
-#endif
-
+bool GUIController::isACRunning() { return false; }
+bool GUIController::isHeatRunning() { return false; }
+bool GUIController::isFanRunning() { return false; }
 
