@@ -90,7 +90,9 @@ int main()
                 {
                     bool shouldRunFan;
                     time_t tickCount = time(NULL);
-                    cAPI.CallFunction(API::ShouldRunFan, &tickCount, sizeof(tickCount), &shouldRunFan, sizeof(shouldRunFan));
+//                    cAPI.CallFunction(API::ShouldRunFan, &tickCount, sizeof(tickCount), &shouldRunFan, sizeof(shouldRunFan));
+
+                    shouldRunFan = cAPI.t_func<bool, time_t>(API::ShouldRunFan, tickCount);
                     printf("Should run fan: %s\n", (shouldRunFan) ? "yes" : "no");
                     break;
                 }

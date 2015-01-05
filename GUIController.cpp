@@ -20,7 +20,7 @@
 
 using namespace std; // I'm lazy
 
-GUIController::GUIController(shared_ptr<Thermostat> therm, shared_ptr<NetworkListener> net)
+GUIController::GUIController(weak_ptr<Thermostat> therm, weak_ptr<NetworkListener> net)
 {
     m_thermostat = therm;
     m_networkListener = net;

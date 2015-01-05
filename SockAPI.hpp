@@ -21,6 +21,10 @@
 
 #include <string>
 #include <vector>
+#include <numeric>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 
 class API
 {
@@ -37,6 +41,33 @@ public:
 
     void CallbackWrapper();
     virtual void Callback(API_CALL call, const void *rcvData, const size_t rcvDataLen, void *&sendData, int *sendDataLen);
+
+    template<typename ret, typename... Args>
+    ret t_func(API_CALL call, Args... adtlargs)
+    {
+        const unsigned short int nArgs = sizeof...(adtlargs);
+        ret returnVal = 0;
+
+        std::vector<const char*> params = {(const char*)&adtlargs...};
+        std::vector<size_t> paramSizes = {sizeof(adtlargs)...};
+
+        size_t dataSize = std::accumulate(paramSizes.begin(), paramSizes.end(), 0);
+        char *data = (char*)malloc(sizeof(char) * dataSize);
+        size_t position = 0;
+        for (size_t i = 0; i < nArgs; ++i)
+        {
+            std::memcpy(data + position, params[i], paramSizes[i]);
+            position += paramSizes[i];
+        }
+
+        CallFunction(call, data, dataSize, &returnVal, sizeof(ret));
+
+        delete data;
+        return returnVal; 
+    }
+
+    //template<typename ret, typename... Args>
+    //ret t_func(API_CALL call, Args... adtlargs);
     
 private:
     int sock_;

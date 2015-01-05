@@ -19,7 +19,7 @@
  * along with this program. If not, see <http://www.gnu.org/licenses/>.
 */
 
-#include <shared_ptr>
+#include <memory>
 
 // Forward decl to improve preprocess/compile time.
 class Thermostat;
@@ -28,7 +28,7 @@ class NetworkListener;
 class GUIController
 {
 public:
-    GUIController(std::shared_ptr<Thermostat> therm, std::shared_ptr<NetworkListener>);
+    GUIController(std::weak_ptr<Thermostat> therm, std::weak_ptr<NetworkListener>);
     float getOutdoorTemperature();
     float getIndoorTemperature();
     float getOutdoorHumidity();
@@ -38,9 +38,9 @@ public:
     bool isHeatRunning();
     bool isFanRunning();
 private:
-    std::shared_ptr<Thermostat> m_thermostat;
-    std::shared_ptr<NetworkListener> m_networkListener;
-}
+    std::weak_ptr<Thermostat> m_thermostat;
+    std::weak_ptr<NetworkListener> m_networkListener;
+};
 
 #endif
 

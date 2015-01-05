@@ -18,9 +18,10 @@
 
 #include "MainWindow.hpp"
 #include "GUIController.hpp"
+#include "NetworkListener.hpp"
 
 MainWindow::MainWindow(BaseObjectType* winObj, Glib::RefPtr<Gtk::Builder> &builder)
-    : Gtk::Window(winObj), m_controller(this)
+    : Gtk::Window(winObj)
 {
     listener = NULL;
     builder->get_widget("button1", button1);
